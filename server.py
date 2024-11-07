@@ -77,3 +77,10 @@ while True:
     # Start a new thread to handle each client
     client_thread = threading.Thread(target=handle_client, args=(client_socket,))
     client_thread.start()
+
+"""
+TO DO
+- Create a max timer for each item
+- Ensure we can connect clients from different laptops on the same server
+
+"""

@@ -61,3 +61,12 @@ while True:
         break
 
 client_socket.close()
+
+"""
+TO DO
+- Create a table to display the items and their prices
+- Allow user to input their total budget
+- Adjust UI to make it more user-friendly
+- 
+
+"""
