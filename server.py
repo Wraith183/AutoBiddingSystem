@@ -8,7 +8,7 @@ def initialize_items():
     items = {}
     for i in range(1, 11):  # Create 10 items
         items[f'Item{i}'] = {
-            'units': random.randint(10, 100),  # Random units between 10 and 100
+            'units': random.randint(1, 3),  # Random units between 1 and 3 for testing
             'price': random.randint(50, 800),  # Random price between 50 and 800
             'highest_bid': 0,
             'highest_bidder': None
@@ -27,22 +27,28 @@ def handle_client(client_socket):
     client_socket.send(json.dumps(items).encode())
     
     while True:
-        # Receive bid from client
         try:
+            # Receive bid from client
             bid_data = client_socket.recv(1024).decode()
             if not bid_data:
                 break
-            
+
             bid = json.loads(bid_data)
             item = bid['item']
             bid_amount = bid['bid']
             print(f"Received bid of {bid_amount} on {item} from {client_socket.getpeername()}")
 
+            # Check if the item still exists (i.e., it has not sold out)
+            if item not in items:
+                response = {"status": "sold_out", "item": item}
+                client_socket.send(json.dumps(response).encode())
+                continue
+
             # Check if bid is higher than the current highest bid
             if bid_amount > items[item]['highest_bid']:
                 items[item]['highest_bid'] = bid_amount
                 items[item]['highest_bidder'] = client_socket.getpeername()
-                
+
                 # Inform client that they are the highest bidder
                 response = {"status": "won", "item": item, "amount": bid_amount}
                 client_socket.send(json.dumps(response).encode())
@@ -54,14 +60,14 @@ def handle_client(client_socket):
                     print(f"{item} is sold out")
                     del items[item]  # Remove sold-out item
             else:
-                # Inform client that they did not win
+                # Inform client that they were outbid
                 response = {"status": "outbid", "item": item, "amount": bid_amount}
                 client_socket.send(json.dumps(response).encode())
-        
+
         except Exception as e:
             print(f"Error handling bid from {client_socket.getpeername()}: {e}")
             break
-    
+
     client_socket.close()
 
 # Set up the server socket
@@ -77,6 +83,7 @@ while True:
     # Start a new thread to handle each client
     client_thread = threading.Thread(target=handle_client, args=(client_socket,))
     client_thread.start()
+
 
 """
 TO DO
